@@ -24,7 +24,15 @@ Lives in the menu bar. Works while any app is in front.
 Every button can be remapped: menu bar icon → Button Mapping.
 Pointer and scroll speed, invert scroll, and swap sticks are in the menu too.
 
-## Build
+## Download
+1. Get **ControllerMouse-macOS.zip** from the [latest release](https://github.com/tenzerodev/ControllerMouse/releases/latest).
+2. Unzip it and drag **ControllerMouse.app** into Applications.
+3. The first time, **right-click → Open → Open** (the app isn't notarized by Apple).
+   If macOS says it's damaged or won't open, run: `xattr -cr /Applications/ControllerMouse.app`
+
+Works on Apple Silicon and Intel Macs, macOS 13 Ventura or later.
+
+## Build from source
 ```bash
 git clone https://github.com/tenzerodev/ControllerMouse.git
 cd ControllerMouse && bash build.sh
