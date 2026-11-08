@@ -24,7 +24,7 @@ Lives in the menu bar. Works while any app is in front.
 Every button can be remapped: menu bar icon → Button Mapping.
 Pointer and scroll speed, invert scroll, and swap sticks are in the menu too.
 
-## Download
+## Download (Mac)
 1. Get **ControllerMouse-macOS.zip** from the [latest release](https://github.com/tenzerodev/ControllerMouse/releases/latest).
 2. Unzip it and drag **ControllerMouse.app** into Applications.
 3. The first time, **right-click → Open → Open** (the app isn't notarized by Apple).
@@ -32,7 +32,21 @@ Pointer and scroll speed, invert scroll, and swap sticks are in the menu too.
 
 Works on Apple Silicon and Intel Macs, macOS 13 Ventura or later.
 
-## Build from source
+## Windows
+1. Get **ControllerMouse-Windows.zip** from the [latest release](https://github.com/tenzerodev/ControllerMouse/releases/latest) and unzip it.
+   Keep **ControllerMouse.exe** and **SDL2.dll** in the same folder.
+2. Run **ControllerMouse.exe**. If SmartScreen says "Windows protected your PC", click **More info → Run anyway** (the app isn't code-signed).
+3. Connect a controller — PS4 and Switch Pro both work over **USB or Bluetooth** on Windows.
+
+Same controls as the Mac version, with Windows actions: Y/△ = Task View, Options/+ = Start menu,
+Share/− = Show Desktop, PS/Home = On-Screen Keyboard, touchpad click = left click.
+Remap anything from the tray icon → Button Mapping.
+
+- If nothing happens, close Steam (or turn off Steam Input) — it can take over the controller.
+- It can't control apps running as Administrator unless Controller Mouse is also run as Administrator.
+- Uses [SDL2](https://libsdl.org) (zlib license) for controller support. Source is in [`windows/`](windows) (C# / .NET 8).
+
+## Build from source (Mac)
 ```bash
 git clone https://github.com/tenzerodev/ControllerMouse.git
 cd ControllerMouse && bash build.sh
