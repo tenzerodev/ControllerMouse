@@ -262,7 +262,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let out = Output()
     private var timer: Timer?
 
-    private var enabled = true { didSet { if !enabled { out.releaseAll() }; updateIcon() } }
+    private var enabled = true { didSet { if !enabled { releaseEverything() }; updateIcon(); updateTimer() } }
     private var pressed = Set<Button>()
     private var activeAction: [Button: Action] = [:]   // action captured at press time
     private var precisionHeld = 0, turboHeld = 0
@@ -322,10 +322,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         nc.addObserver(self, selector: #selector(controllerDisconnected(_:)), name: .GCControllerDidDisconnect, object: nil)
         GCController.controllers().forEach(configure)
         GCController.startWirelessControllerDiscovery {}
+        updateTimer()
+    }
 
-        let t = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] _ in self?.tick() }
-        RunLoop.main.add(t, forMode: .common)
-        timer = t
+    /// Polls the sticks only while a controller is connected and the app is on, so it uses no battery otherwise.
+    private func updateTimer(ignoring gone: GCController? = nil) {
+        let connected = GCController.controllers().contains { $0 !== gone }
+        if enabled && connected {
+            guard timer == nil else { return }
+            let t = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] _ in self?.tick() }
+            RunLoop.main.add(t, forMode: .common)
+            timer = t
+        } else {
+            timer?.invalidate()
+            timer = nil
+        }
+    }
+
+    /// Lets go of every click, key, repeat and speed modifier. A disconnected controller never sends "released".
+    private func releaseEverything() {
+        out.releaseAll()
+        pressed.removeAll()
+        activeAction.removeAll()
+        repeating = nil
+        precisionHeld = 0
+        turboHeld = 0
     }
 
     private func updateIcon() {
@@ -338,12 +359,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func controllerConnected(_ n: Notification) {
         if let c = n.object as? GCController { configure(c) }
+        updateTimer()
     }
 
     @objc private func controllerDisconnected(_ n: Notification) {
-        if let c = n.object as? GCController { touchLast[ObjectIdentifier(c)] = nil }
-        out.releaseAll()
-        pressed.removeAll()
+        let c = n.object as? GCController
+        if let c { touchLast[ObjectIdentifier(c)] = nil }
+        releaseEverything()
+        updateTimer(ignoring: c)
     }
 
     private func configure(_ c: GCController) {

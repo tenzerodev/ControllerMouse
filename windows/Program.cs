@@ -255,8 +255,6 @@ sealed class ControllerApp : IDisposable
         if (SDL.SDL_Init(SDL.INIT_GAMECONTROLLER | SDL.INIT_JOYSTICK | SDL.INIT_EVENTS) != 0)
             MessageBox.Show("Couldn't start the controller library:\n" + SDL.Error(), "Controller Mouse");
 
-        Win.timeBeginPeriod(1);
-
         tray = new NotifyIcon
         {
             Icon = TrayIcon.Make(true),
@@ -273,9 +271,21 @@ sealed class ControllerApp : IDisposable
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.Invoke(tray, null);
         };
 
-        timer = new Timer { Interval = 8 };
+        timer = new Timer { Interval = IdleInterval };
         timer.Tick += (_, _) => Tick();
         timer.Start();
+    }
+
+    const int FastInterval = 8, IdleInterval = 250;
+    bool fastPolling;
+
+    /// Polls quickly (with a 1 ms system timer) only while a controller is connected, to save battery otherwise.
+    void SetFastPolling(bool fast)
+    {
+        if (fast == fastPolling) return;
+        fastPolling = fast;
+        if (fast) Win.timeBeginPeriod(1); else Win.timeEndPeriod(1);
+        timer.Interval = fast ? FastInterval : IdleInterval;
     }
 
     public void Dispose()
@@ -284,7 +294,7 @@ sealed class ControllerApp : IDisposable
         ReleaseAll();
         foreach (var p in pads.Values) SDL.SDL_GameControllerClose(p);
         SDL.SDL_Quit();
-        Win.timeEndPeriod(1);
+        SetFastPolling(false);
         tray.Visible = false;
         tray.Dispose();
         Marshal.FreeHGlobal(eventBuffer);
@@ -313,6 +323,7 @@ sealed class ControllerApp : IDisposable
             var p = SDL.SDL_GameControllerOpen(i);
             if (p != IntPtr.Zero) pads[id] = p;
         }
+        SetFastPolling(pads.Count > 0);
     }
 
     // ── Main loop (~100×/sec) ────────────────────────────────────────────────
@@ -482,7 +493,10 @@ sealed class ControllerApp : IDisposable
     void BuildMenu()
     {
         var m = tray.ContextMenuStrip!;
+        var old = new ToolStripItem[m.Items.Count];
+        m.Items.CopyTo(old, 0);
         m.Items.Clear();
+        foreach (var item in old) item.Dispose();   // the menu is rebuilt on every open; free the old items
 
         if (pads.Count == 0) Info(m, "No controller connected");
         foreach (var p in pads.Values)
@@ -610,7 +624,12 @@ static class TrayIcon
             var size = g.MeasureString(glyph, font);
             g.DrawString(glyph, font, Drawing.Brushes.White, (32 - size.Width) / 2 + 1, (32 - size.Height) / 2 + 1);
         }
-        return Drawing.Icon.FromHandle(bmp.GetHicon());
+        // FromHandle doesn't own the handle, so copy it into a managed icon and free the original.
+        IntPtr handle = bmp.GetHicon();
+        using var borrowed = Drawing.Icon.FromHandle(handle);
+        var icon = (Drawing.Icon)borrowed.Clone();
+        Win.DestroyIcon(handle);
+        return icon;
     }
 }
 
@@ -670,6 +689,7 @@ static class Win
 {
     [DllImport("winmm.dll")] public static extern uint timeBeginPeriod(uint ms);
     [DllImport("winmm.dll")] public static extern uint timeEndPeriod(uint ms);
+    [DllImport("user32.dll")] public static extern bool DestroyIcon(IntPtr handle);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

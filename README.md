@@ -1,6 +1,6 @@
 # Controller Mouse for macOS
 
-Use a PS4 (DualShock 4) or Nintendo Switch controller as a mouse / trackpad.
+Use a PS4 (DualShock 4), PS5 (DualSense) or Nintendo Switch controller as a mouse / trackpad.
 Lives in the menu bar. Works while any app is in front.
 
 ## Default controls
@@ -21,14 +21,21 @@ Lives in the menu bar. Works while any app is in front.
 | Share / − | Show Desktop |
 | Click both sticks | Turn Controller Mouse on/off |
 
+Buttons go by position, like on a PlayStation pad: on a Switch controller, "A / ✕" is the bottom button (labelled B).
 Every button can be remapped: menu bar icon → Button Mapping.
 Pointer and scroll speed, invert scroll, and swap sticks are in the menu too.
 
 ## Download (Mac)
 1. Get **ControllerMouse-macOS.zip** from the [latest release](https://github.com/tenzerodev/ControllerMouse/releases/latest).
 2. Unzip it and drag **ControllerMouse.app** into Applications.
-3. The first time, **right-click → Open → Open** (the app isn't notarized by Apple).
+3. The first time, double-click it. macOS will say it can't check the app (it isn't notarized by Apple):
+   click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
+   On macOS 14 or earlier, **right-click → Open → Open** also works.
    If macOS says it's damaged or won't open, run: `xattr -cr /Applications/ControllerMouse.app`
+4. Allow **Accessibility** when asked (System Settings → Privacy & Security → Accessibility), so it can move the pointer.
+
+**Updating:** macOS treats each new version as a different app, so the pointer stops moving after an update even though the switch looks on.
+Remove the old Controller Mouse entry from Accessibility (−) and allow it again.
 
 Works on Apple Silicon and Intel Macs, macOS 13 Ventura or later.
 
